@@ -19,7 +19,6 @@ const OrderSchema = new mongoose.Schema({
   },
 })
 
-// Initialize Order model
 const Order = mongoose.models.Order || mongoose.model("Order", OrderSchema)
 
 // Helper function to handle CORS
