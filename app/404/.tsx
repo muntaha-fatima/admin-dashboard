@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from "react"
 import Client404 from "../../components/client404"
 
