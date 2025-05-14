@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,6 +6,7 @@ import { login } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import axios from "axios"; // required for checking axios errors
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,16 +14,19 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => { 
-
-
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       const res = await login(email, password);
       const token = res.token;
       localStorage.setItem("token", token);
-      router.push("/"); // or wherever you want to redirect
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Login failed");
+      router.push("/");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "Login failed");
+      } else {
+        setError("Login failed");
+      }
     }
   };
 
@@ -32,7 +36,8 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         <CardContent>
           <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
           {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-          <div className="space-y-4">
+
+          <form onSubmit={handleLogin} className="space-y-4">
             <Input
               placeholder="Email"
               type="email"
@@ -45,11 +50,8 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-           <form onSubmit={handleLogin}>
-  {/* inputs here */}
-  <Button type="submit">Login</Button>
-</form>
-          </div>
+            <Button type="submit">Login</Button>
+          </form>
         </CardContent>
       </Card>
     </div>

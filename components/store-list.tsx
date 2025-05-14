@@ -150,10 +150,9 @@ export default function StoreList() {
 const handleDelete = async (id: string) => {
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    console.error("Token not found");
-    return;
-  }
+if (!token) return;
+
+// use token in API call:
 
   try {
     await deleteStore(id, token);
