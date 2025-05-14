@@ -43,11 +43,15 @@ export default function CategoriesPage() {
       setCategories(res.categories || []);
     } catch (err) {
   console.error(err);
-  toast.error("Something went wrong.");
-} finally {
-      setLoading(false);
-    }
+
+  if (err instanceof Error) {
+    toast.error(err.message);
+  } else {
+    toast.error("Something went wrong.");
   }
+}
+
+
 
   async function handleCreate() {
     if (!token) return toast.error("Token not found!");
@@ -153,4 +157,5 @@ export default function CategoriesPage() {
       </div>
     </div>
   );
+}
 }
