@@ -85,28 +85,6 @@ export const deleteStore = async (id: string, token: string) => {
 // COUPONS
 // ---------------------
 
-type Coupons = {
-  _id: string;
-  offerDetails: string;
-  code?: string;
-  active: boolean;
-  isValid: boolean;
-  featuredForHome: boolean;
-  hits: number;
-  lastAccessed: string;
-  expirationDate?: string;
-  store?: {
-    name: string;
-    trackingUrl: string;
-    image?: {
-      url: string;
-      alt: string;
-    };
-  };
-};
-
-
-
 export async function fetchAllCouponsPaginated() {
   const allCoupons: Coupon[] = [];
   let currentPage = 1;
