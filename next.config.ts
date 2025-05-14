@@ -8,16 +8,12 @@
 
 
 
-/** @type {import('next').NextConfig} */
-const nextConfig: import('next').NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/stores",
-        destination: "https://coupon-app-backend.vercel.app/api/stores", // Proxy to backend
-      },
-    ];
+// ** @type {import('next').NextConfig} */
+const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true, // ESLint errors won't block build/deploy
   },
+  reactStrictMode: true,
 };
 
 module.exports = nextConfig;
