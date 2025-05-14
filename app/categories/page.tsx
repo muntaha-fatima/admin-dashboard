@@ -32,9 +32,13 @@ export default function CategoriesPage() {
 
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+ useEffect(() => {
+  const fetch = async () => {
+    await loadCategories();
+  };
+  fetch();
+}, []);
+
 
   async function loadCategories() {
     setLoading(true);
