@@ -6,8 +6,7 @@ const nextConfig = {
   reactStrictMode: true,
 };
 
-module.exports = nextConfig; // ✅ yeh JS (CommonJS) file mein sahi hai
-
+export default nextConfig; // ✅ Yeh hi likhna hai TypeScript mein
 
 
 // // ** @type {import('next').NextConfig} */
