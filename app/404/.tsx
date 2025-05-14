@@ -1,12 +1,10 @@
-'use client'
+// ✅ app/404.tsx
+import dynamic from 'next/dynamic'
 
-import { Suspense } from "react"
-import Client404 from "../../components/client404"
+const Client404 = dynamic(() => import('@/components/client404'), {
+  ssr: false,
+})
 
 export default function NotFoundPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Client404 />
-    </Suspense>
-  )
+  return <Client404 />
 }
