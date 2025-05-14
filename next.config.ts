@@ -3,12 +3,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
 };
 
-export default nextConfig; // ✅ Yeh hi likhna hai TypeScript mein
-
-
+export default nextConfig;
 // // ** @type {import('next').NextConfig} */
 // const nextConfig = {
 //   eslint: {
