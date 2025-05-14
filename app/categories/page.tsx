@@ -7,14 +7,20 @@ import {Button} from "../../components/ui/button"
 import {Input,} from "../../components/ui/input"
 import {Label} from "../../components/ui/label"
 
-
-
-
-
 import { toast } from "sonner";
+import Image from "next/image";
 
+
+type Category = {
+  _id: string;
+  name: string;
+  description: string;
+  icon: string;
+  order: number;
+  active: boolean;
+};
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] =useState <Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     name: "",
@@ -36,8 +42,9 @@ export default function CategoriesPage() {
       const res = await fetchCategories();
       setCategories(res.categories || []);
     } catch (err) {
-      toast.error("Failed to fetch categories.");
-    } finally {
+  console.error(err);
+  toast.error("Something went wrong.");
+} finally {
       setLoading(false);
     }
   }
@@ -130,7 +137,7 @@ export default function CategoriesPage() {
                 <CardContent className="space-y-2">
                   <p>{cat.description}</p>
                   {cat.icon && (
-                    <img src={cat.icon} alt="icon" className="w-10 h-10" />
+                    <Image src={cat.icon} alt="icon" className="w-10 h-10" />
                   )}
                   <Button
                     variant="destructive"

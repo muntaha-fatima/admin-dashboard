@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchCoupons, deleteCoupon } from "@/lib/api";
+import { fetchAllCouponsPaginated, deleteCoupon } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -31,7 +31,7 @@ export default function CouponList() {
 
   const loadCoupons = async () => {
     try {
-      const data = await fetchCoupons({ isValid: true });
+      const data = await fetchAllCouponsPaginated({ isValid: true });
       setCoupons(data);
     } catch (err) {
       console.error("Failed to load coupons", err);

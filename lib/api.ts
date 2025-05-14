@@ -1,115 +1,8 @@
-// import axios from "axios";
 
-// const response = "https://coupon-app-backend.vercel.app/api/coupons";
-
-// export async function fetchCoupons(params = {}) {
-//   const response = await axios.get(API_BASE, { params });
-//   return response.data.data; // coupons array
-// }
-
-// export async function createCoupon(data: {
-//   offerDetails: string;
-//   store: string;
-//   code?: string;
-//   active?: boolean;
-//   isValid?: boolean;
-//   featuredForHome?: boolean;
-//   expirationDate?: string;
-  
-// }) {
-//   const response = await axios.post(API_BASE, data, {
-//     headers: {
-//       Authorization: `Bearer YOUR_TOKEN_HERE`, // replace with actual token logic
-//     },
-//   });
-//   return response.data;
-// }
-
-// export async function deleteCoupon(id: string) {
-//   const response = await axios.delete(`${API_BASE}/${id}`, {
-//     headers: {
-//       Authorization: `Bearer YOUR_TOKEN_HERE`,
-//     },
-//   });
-//   return response.data;
-// }
-
-// export async function trackCoupon(couponId: string) {
-//   const response = await axios.post(`${API_BASE}/${couponId}/track`);
-//   return response.data;
-// }
-
-
-
-
-
-
-
-
-// // lib/api/stores.ts
-
-// // lib/api/stores.ts
-
-// // lib/api.ts
-// // lib/api.ts
-
-
-// export const API_BASE = "https://coupon-app-backend.vercel.app/api/stores";
-
-// export async function fetchStores() {
-//   try {
-//     const response = await axios.get(API_BASE);
-//     return response.data.data; // because API response = { status, data, metadata }
-//   } catch (error) {
-//     console.error("Error fetching stores:", error);
-//     throw error;
-//   }
-// }
-
-// export async function deleteStore(id: string) {
-//   try {
-//     const response = await axios.delete(`${API_BASE}/${id}`, {
-//       headers: {
-//         Authorization: `Bearer YOUR_TOKEN_HERE`, // Replace with real token
-//       },
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error deleting store:", error);
-//     throw error;
-//   }
-// }
-
-
-
-
-/**
- * Fetch stores for dropdown
- * Note: This is a mock function as the API endpoint wasn't provided
- */
-// export async function fetchStores() {
-//   // In a real app, you would fetch from an actual endpoint
-//   // This is a mock implementation
-//   return [
-//     { _id: "store1", name: "Amazon" },
-//     { _id: "store2", name: "Walmart" },
-//     { _id: "store3", name: "Target" },
-//     { _id: "store4", name: "Best Buy" },
-//     { _id: "store5", name: "Newegg" },
-//     { _id: "store6", name: "eBay" },
-//   ]
-// }
-
-
-
-
-
-// lib/api.ts
 
 import axios from "axios";
 
 const COUPONS_API = "https://coupon-app-backend.vercel.app/api/coupons";
-const STORES_API = "https://coupon-app-backend.vercel.app/api/stores";
 
 // ---------------------
 // STORES
@@ -138,11 +31,6 @@ export type Store = {
 };
 
 
-const API_URL = "https://coupon-app-backend.vercel.app/api/stores";
-
-// lib/api.tsconst BASE_URL = "https://coupon-app-backend.vercel.app/api";
-
-// lib/api.ts
 
 const BASE_URL = "https://coupon-app-backend.vercel.app/api";
 
@@ -181,22 +69,22 @@ export const deleteStore = async (id: string, token: string) => {
 
 const API_BASE = "https://coupon-app-backend.vercel.app/api/coupons";
 
-export async function fetchCoupons(p0: { isValid: boolean; }) {
-  let allCoupons: any[] = [];
+export async function fetchAllCouponsPaginated(p0: { isValid: boolean; }) {
+  const allCoupons: any[] = [];
   let currentPage = 1;
   let totalPages = 1;
 
   try {
     while (currentPage <= totalPages) {
-      const response = await axios.get(API_BASE, {
+      const response = await axios.get("https://coupon-app-backend.vercel.app/api/coupons", {
         params: { page: currentPage },
       });
 
       const { data, metadata } = response.data;
 
-      allCoupons.push(...data); // Add this page's coupons
-      totalPages = metadata.totalPages; // Set total pages
-      currentPage++; // Go to next page
+      allCoupons.push(...data);
+      totalPages = metadata.totalPages;
+      currentPage++;
     }
 
     return allCoupons;
@@ -205,7 +93,6 @@ export async function fetchCoupons(p0: { isValid: boolean; }) {
     throw error;
   }
 }
-
 
 // Create coupon
 export async function createCoupon(data: {

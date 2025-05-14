@@ -109,6 +109,7 @@ import { useEffect, useState } from "react";
 import { fetchStores, deleteStore } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 type Store = {
   _id: string;
@@ -127,7 +128,6 @@ type Store = {
 export default function StoreList() {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(false);
-  const token = "your_token_here"; // TODO: Replace with actual token (e.g. from context or localStorage)
 
   const loadStores = async () => {
     setLoading(true);
@@ -177,7 +177,7 @@ const handleDelete = async (id: string) => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 {store.image?.url && (
-                  <img
+                  <Image
                     src={store.image.url}
                     alt={store.image.alt || store.name}
                     className="w-12 h-12 object-contain rounded"

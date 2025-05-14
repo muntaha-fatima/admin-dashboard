@@ -13,7 +13,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
+const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => { 
+
+
     try {
       const res = await login(email, password);
       const token = res.token;
@@ -43,9 +45,10 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button className="w-full" onClick={handleLogin}>
-              Login
-            </Button>
+           <form onSubmit={handleLogin}>
+  {/* inputs here */}
+  <button type="submit">Login</button>
+</form>
           </div>
         </CardContent>
       </Card>
