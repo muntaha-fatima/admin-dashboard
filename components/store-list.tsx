@@ -72,13 +72,16 @@ if (!token) return;
           <Card key={store._id} className="p-4 flex justify-between items-start">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                {store.image?.url && (
-                  <Image
-                    src={store.image.url}
-                    alt={store.image.alt || store.name}
-                    className="w-12 h-12 object-contain rounded"
-                  />
-                )}
+               {store.image?.url && (
+  <Image
+    src={store.image.url}
+    alt={store.image.alt || store.name}
+    width={48}
+    height={48}
+    className="w-12 h-12 object-contain rounded"
+  />
+)}
+
                 <div>
                   <div className="font-semibold">{store.name}</div>
                   <p className="text-sm text-muted-foreground">{store.short_description}</p>

@@ -1,165 +1,37 @@
-"use client";
 
-import { useEffect, useState } from "react";
-import {fetchCategories, createCategory, deleteCategory} from "../../lib/api";
-import {Card,CardContent, CardHeader,CardTitle,} from "../../components/ui/card";
-import {Button} from "../../components/ui/button"
-import {Input,} from "../../components/ui/input"
-import {Label} from "../../components/ui/label"
+// app/categories/page.tsx
+import { fetchCategories } from "@/lib/api";
 
-import { toast } from "sonner";
-import Image from "next/image";
-
-
-type Category = {
-  _id: string;
-  name: string;
-  description: string;
-  icon: string;
-  order: number;
-  active: boolean;
-};
-export default function CategoriesPage() {
-  const [categories, setCategories] =useState <Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    icon: "",
-    order: 0,
-    active: true,
-  });
-
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
- useEffect(() => {
-  const fetch = async () => {
-    await loadCategories();
-  };
-  fetch();
-}, []);
-
-
-  async function loadCategories() {
-    setLoading(true);
-    try {
-      const res = await fetchCategories();
-      setCategories(res.categories || []);
-    } catch (err) {
-  console.error(err);
-
-  if (err instanceof Error) {
-    toast.error(err.message);
-  } else {
-    toast.error("Something went wrong.");
-  }
-}
-
-
-
-  async function handleCreate() {
-    if (!token) return toast.error("Token not found!");
-
-    try {
-      await createCategory(form, token);
-      toast.success("Category created!");
-      setForm({
-        name: "",
-        description: "",
-        icon: "",
-        order: 0,
-        active: true,
-      });
-      await loadCategories();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error creating category.");
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (!token) return toast.error("Token not found!");
-    try {
-      await deleteCategory(id, token);
-      toast.success("Category deleted.");
-      await loadCategories();
-    } catch (err) {
-      toast.error("Failed to delete category.");
-    }
-  }
+export default async function CategoryPage() {
+  const data = await fetchCategories();
+  const categories = data.categories;
 
   return (
-    <div className="p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Category</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Name</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Input
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Icon URL</Label>
-              <Input
-                value={form.icon}
-                onChange={(e) => setForm({ ...form, icon: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Order</Label>
-              <Input
-                type="number"
-                value={form.order}
-                onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
-              />
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <Button onClick={handleCreate}>Create</Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Categories</h1>
 
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Categories</h2>
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {categories.map((cat) => (
-              <Card key={cat._id}>
-                <CardHeader>
-                  <CardTitle>{cat.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p>{cat.description}</p>
-                  {cat.icon && (
-                    <Image src={cat.icon} alt="icon" className="w-10 h-10" />
-                  )}
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleDelete(cat._id)}
-                  >
-                    Delete
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      {categories.length === 0 ? (
+        <p className="text-gray-500">No categories found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {categories.map((cat) => (
+            <li key={cat._id} className="border p-4 rounded shadow-sm">
+              <div className="flex items-center space-x-3">
+                {cat.icon && (
+                  <img src={cat.icon} alt={cat.name} className="w-8 h-8 object-contain" />
+                )}
+                <div>
+                  <h2 className="text-lg font-semibold">{cat.name}</h2>
+                  <p className="text-sm text-gray-600">{cat.description}</p>
+                </div>
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                Status: {cat.active ? "Active" : "Inactive"} | Order: {cat.order}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
-}
 }
