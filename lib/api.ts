@@ -2,13 +2,7 @@
 
 
 
-
-import axios from "axios";
-
 const BASE_URL = "https://coupon-app-backend.vercel.app/api";
-const COUPONS_API = `${BASE_URL}/coupons`;
-const CATEGORIES_API = `${BASE_URL}/categories`;
-const AUTH_API = `${BASE_URL}/auth`;
 const STORES_API = `${BASE_URL}/stores`;
 
 // ---------------------
