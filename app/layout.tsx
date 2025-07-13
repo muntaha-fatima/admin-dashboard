@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { CouponFilters } from "@/components/coupon-fliters";
+// import { CouponFilters } from "@/components/coupon-fliters";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -31,7 +31,7 @@ export default function RootLayout({
       >
         {children}
        <Suspense fallback={<div>Loading...</div>}>
-      <CouponFilters />
+      {/* <CouponFilters /> */}
     </Suspense>
       </body>
     </html>
