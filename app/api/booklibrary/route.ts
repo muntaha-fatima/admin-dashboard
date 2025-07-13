@@ -130,7 +130,7 @@ export async function GET(req: NextRequest) {
     console.log("📍 Applied filter:", filter);
     const books = await Book.find(filter).sort({ createdAt: -1 });
 
-    const host = req.headers.get("host") || "localhost:3000";
+    const host = req.headers.get("host") || "";
     const protocol = req.headers.get("x-forwarded-proto") || "https";
 
     const booksWithFullUrl = books.map((book: any) => ({
@@ -158,9 +158,10 @@ export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
+// 🔧 Inside POST handler
+const host = req.headers.get("host") || "frontend-ne9r1gonc-muntaha-fatimas-projects.vercel.app";
+const protocol = req.headers.get("x-forwarded-proto") || "https";
 
-    const host = req.headers.get("host") || "localhost:3000";
-    const protocol = req.headers.get("x-forwarded-proto") || "https";
 
     const newBook = await Book.create({
       ...body,
