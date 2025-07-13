@@ -44,7 +44,7 @@ import { Book } from "../../../models/book";
 
 // ✅ Helper to add CORS headers
 function withCORS(response: NextResponse) {
-  response.headers.set("Access-Control-Allow-Origin", "http://localhost:3003"); // change as needed
+  response.headers.set("Access-Control-Allow-Origin", "https://frontend-rho-jet-76.vercel.app"); // change as needed
   response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   response.headers.set("Access-Control-Allow-Headers", "Content-Type");
   return response;
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     const body = await req.json();
 
-    const host = req.headers.get("host") || "localhost:3000";
+    const host = req.headers.get("host") || "https://frontend-rho-jet-76.vercel.app";
     const protocol = req.headers.get("x-forwarded-proto") || "http";
 
     const newBook = await Book.create({
