@@ -104,8 +104,10 @@ import { Book } from "../../../models/book";
 
 // ✅ Allowed origins (only admin dashboard for now)
 const allowedOrigins = [
-  "https://frontend-ne9r1gonc-muntaha-fatimas-projects.vercel.app" // 🧑‍💻 Admin dashboard
+  "https://frontend-rho-jet-76.vercel.app",    // ✅ Admin Dashboard
+  "https://book-website-rho-sooty.vercel.app"  // ✅ Book Library Frontend
 ];
+
 
 // ✅ CORS helper
 function withCORS(response: NextResponse, req: NextRequest) {
