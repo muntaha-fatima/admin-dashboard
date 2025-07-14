@@ -96,18 +96,15 @@
 
 
 
-
-
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Book } from "../../../models/book";
 
-// ✅ Allowed origins (only admin dashboard for now)
+// ✅ Allowed origins (Admin + Book Website)
 const allowedOrigins = [
-  "https://frontend-rho-jet-76.vercel.app",    // ✅ Admin Dashboard
-  "https://book-website-rho-sooty.vercel.app"  // ✅ Book Library Frontend
+  "https://frontend-rho-jet-76.vercel.app",    // Admin Dashboard
+  "https://book-website-rho-sooty.vercel.app"  // Book Library Frontend
 ];
-
 
 // ✅ CORS helper
 function withCORS(response: NextResponse, req: NextRequest) {
@@ -120,7 +117,7 @@ function withCORS(response: NextResponse, req: NextRequest) {
   return response;
 }
 
-// ✅ GET handler
+// ✅ GET handler (safe image & URL mapping)
 export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
@@ -137,15 +134,23 @@ export async function GET(req: NextRequest) {
 
     const booksWithFullUrl = books.map((book: any) => ({
       ...book.toObject(),
-      imageUrl: book.imageUrl?.startsWith("http")
-        ? book.imageUrl
-        : `${protocol}://${host}${book.imageUrl}`,
-      pdfUrl: book.pdfUrl?.startsWith("http")
-        ? book.pdfUrl
-        : `${protocol}://${host}${book.pdfUrl}`,
-      promoImageUrl: book.promoImageUrl?.startsWith("http")
-        ? book.promoImageUrl
-        : `${protocol}://${host}${book.promoImageUrl}`,
+      imageUrl: book.imageUrl
+        ? (book.imageUrl.startsWith("http")
+            ? book.imageUrl
+            : `${protocol}://${host}${book.imageUrl}`)
+        : "",
+
+      pdfUrl: book.pdfUrl
+        ? (book.pdfUrl.startsWith("http")
+            ? book.pdfUrl
+            : `${protocol}://${host}${book.pdfUrl}`)
+        : "",
+
+      promoImageUrl: book.promoImageUrl
+        ? (book.promoImageUrl.startsWith("http")
+            ? book.promoImageUrl
+            : `${protocol}://${host}${book.promoImageUrl}`)
+        : "",
     }));
 
     return withCORS(NextResponse.json(booksWithFullUrl), req);
@@ -155,27 +160,34 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ✅ POST handler
+// ✅ POST handler (safe URL mapping)
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
-// 🔧 Inside POST handler
-const host = req.headers.get("host") || "frontend-ne9r1gonc-muntaha-fatimas-projects.vercel.app";
-const protocol = req.headers.get("x-forwarded-proto") || "https";
 
+    const host = req.headers.get("host") || "frontend-rho-jet-76.vercel.app";
+    const protocol = req.headers.get("x-forwarded-proto") || "https";
 
     const newBook = await Book.create({
       ...body,
-      imageUrl: body.imageUrl?.startsWith("http")
-        ? body.imageUrl
-        : `${protocol}://${host}${body.imageUrl}`,
-      pdfUrl: body.pdfUrl?.startsWith("http")
-        ? body.pdfUrl
-        : `${protocol}://${host}${body.pdfUrl}`,
-      promoImageUrl: body.promoImageUrl?.startsWith("http")
-        ? body.promoImageUrl
-        : `${protocol}://${host}${body.promoImageUrl}`,
+      imageUrl: body.imageUrl
+        ? (body.imageUrl.startsWith("http")
+            ? body.imageUrl
+            : `${protocol}://${host}${body.imageUrl}`)
+        : "",
+
+      pdfUrl: body.pdfUrl
+        ? (body.pdfUrl.startsWith("http")
+            ? body.pdfUrl
+            : `${protocol}://${host}${body.pdfUrl}`)
+        : "",
+
+      promoImageUrl: body.promoImageUrl
+        ? (body.promoImageUrl.startsWith("http")
+            ? body.promoImageUrl
+            : `${protocol}://${host}${body.promoImageUrl}`)
+        : "",
     });
 
     return withCORS(NextResponse.json(newBook, { status: 201 }), req);
