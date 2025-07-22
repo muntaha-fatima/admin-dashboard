@@ -100,10 +100,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Book } from "../../../models/book";
 
-// ✅ Allowed origins (Admin + Book Website)
 const allowedOrigins = [
   "https://frontend-rho-jet-76.vercel.app",    // Admin Dashboard
-  "https://book-website-rho-sooty.vercel.app"  // Book Library Frontend
+  "https://book-website-rho-sooty.vercel.app",  // Book Library Frontend
+  "http://localhost:3002" // <-- Yeh line ab shamil hai
 ];
 
 // ✅ CORS helper
@@ -200,5 +200,35 @@ export async function POST(req: NextRequest) {
 // ✅ OPTIONS handler
 export async function OPTIONS(req: NextRequest) {
   const response = new NextResponse(null, { status: 204 });
+
   return withCORS(response, req);
 }
+
+
+// // app/api/booklibrary/route.ts
+// import { NextRequest, NextResponse } from "next/server";
+// import { connectToDatabase } from "@/lib/mongodb";
+// import { Book } from "@/models/book";
+
+// // GET: Get all books
+// export async function GET() {
+//   try {
+//     await connectToDatabase();
+//     const books = await Book.find();
+//     return NextResponse.json(books);
+//   } catch (error) {
+//     return NextResponse.json({ error: "Error fetching books" }, { status: 500 });
+//   }
+// }
+
+// // POST: Create a new book
+// export async function POST(req: NextRequest) {
+//   try {
+//     const body = await req.json();
+//     await connectToDatabase();
+//     const newBook = await Book.create(body);
+//     return NextResponse.json(newBook, { status: 201 });
+//   } catch (error) {
+//     return NextResponse.json({ error: "Error creating book" }, { status: 500 });
+//   }
+// }
