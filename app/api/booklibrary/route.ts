@@ -95,114 +95,158 @@
 // }
 
 
+// // app/api/booklibrary/route.ts
+// import { NextRequest, NextResponse } from "next/server";
+// import { connectToDatabase } from "@/lib/mongodb";
+// import { Book } from "@/models/book"; // <- apne path ke mutabiq adjust kar lena
 
-import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import { Book } from "../../../models/book";
+// // ✅ Allowed origins (Dev + Prod)
+// const allowedOrigins = [
+//   "https://frontend-rho-jet-76.vercel.app",    // Admin Dashboard (deployed)
+//   "https://book-website-rho-sooty.vercel.app", // Book Website (deployed)
+//   "http://localhost:3001",                      // Local backend / frontend
+//   "http://localhost:3002",                      // Local frontend (your case)
+// ];
 
-const allowedOrigins = [
-  "https://frontend-rho-jet-76.vercel.app",    // Admin Dashboard
-  "https://book-website-rho-sooty.vercel.app",  // Book Library Frontend
-  "http://localhost:3002" // <-- Yeh line ab shamil hai
-];
+// function getAllowOrigin(origin: string | null) {
+//   if (!origin) return "";
+//   if (process.env.NODE_ENV === "development") return origin; // Allow all in dev
+//   if (allowedOrigins.includes(origin)) return origin;
+//   return "";
+// }
 
-// ✅ CORS helper
-function withCORS(response: NextResponse, req: NextRequest) {
-  const origin = req.headers.get("origin") || "";
-  if (allowedOrigins.includes(origin)) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
-  }
-  response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-  return response;
-}
+//   // 🔧 Dev convenience (optional): uncomment to allow everything in dev
+//   // if (process.env.NODE_ENV !== "production") return origin;
 
-// ✅ GET handler (safe image & URL mapping)
-export async function GET(req: NextRequest) {
-  try {
-    await connectToDatabase();
 
-    const { searchParams } = new URL(req.url);
-    const isFeatured = searchParams.get("featured");
-    const filter = isFeatured === "true" ? { isFeatured: true } : {};
+// function withCORS(res: NextResponse, req: NextRequest) {
+//   const origin = req.headers.get("origin");
+//   const allowOrigin = getAllowOrigin(origin);
 
-    console.log("📍 Applied filter:", filter);
-    const books = await Book.find(filter).sort({ createdAt: -1 });
+//   if (allowOrigin) {
+//     res.headers.set("Access-Control-Allow-Origin", allowOrigin);
+//     res.headers.set("Vary", "Origin"); // good practice
+//   }
+//   res.headers.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+//   res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   // res.headers.set("Access-Control-Allow-Credentials", "true"); // only if you really need cookies
 
-    const host = req.headers.get("host") || "";
-    const protocol = req.headers.get("x-forwarded-proto") || "https";
+//   return res;
+// }
 
-    const booksWithFullUrl = books.map((book: any) => ({
-      ...book.toObject(),
-      imageUrl: book.imageUrl
-        ? (book.imageUrl.startsWith("http")
-            ? book.imageUrl
-            : `${protocol}://${host}${book.imageUrl}`)
-        : "",
+// // ✅ OPTIONS (preflight)
+// export async function OPTIONS(req: NextRequest) {
+//   const res = new NextResponse(null, { status: 204 });
+//   return withCORS(res, req);
+// }
 
-      pdfUrl: book.pdfUrl
-        ? (book.pdfUrl.startsWith("http")
-            ? book.pdfUrl
-            : `${protocol}://${host}${book.pdfUrl}`)
-        : "",
+// // ✅ GET handler
+// export async function GET(req: NextRequest) {
+//   try {
+//     await connectToDatabase();
 
-      promoImageUrl: book.promoImageUrl
-        ? (book.promoImageUrl.startsWith("http")
-            ? book.promoImageUrl
-            : `${protocol}://${host}${book.promoImageUrl}`)
-        : "",
-    }));
+//     const { searchParams } = new URL(req.url);
+//     const isFeatured = searchParams.get("featured");
+//     const filter = isFeatured === "true" ? { isFeatured: true } : {};
 
-    return withCORS(NextResponse.json(booksWithFullUrl), req);
-  } catch (error) {
-    console.error("❌ GET Error:", error);
-    return withCORS(NextResponse.json({ message: "Server Error" }, { status: 500 }), req);
-  }
-}
+//     const books = await Book.find(filter).sort({ createdAt: -1 });
 
-// ✅ POST handler (safe URL mapping)
-export async function POST(req: NextRequest) {
-  try {
-    await connectToDatabase();
-    const body = await req.json();
+//     const host = req.headers.get("host") || "";
+//     const protocol = req.headers.get("x-forwarded-proto") || "https";
 
-    const host = req.headers.get("host") || "frontend-rho-jet-76.vercel.app";
-    const protocol = req.headers.get("x-forwarded-proto") || "https";
+//     const booksWithFullUrl = books.map((book: any) => ({
+//       ...book.toObject(),
+//       imageUrl: book.imageUrl
+//         ? (book.imageUrl.startsWith("http")
+//             ? book.imageUrl
+//             : `${protocol}://${host}${book.imageUrl}`)
+//         : "",
+//       pdfUrl: book.pdfUrl
+//         ? (book.pdfUrl.startsWith("http")
+//             ? book.pdfUrl
+//             : `${protocol}://${host}${book.pdfUrl}`)
+//         : "",
+//       promoImageUrl: book.promoImageUrl
+//         ? (book.promoImageUrl.startsWith("http")
+//             ? book.promoImageUrl
+//             : `${protocol}://${host}${book.promoImageUrl}`)
+//         : "",
+//     }));
 
-    const newBook = await Book.create({
-      ...body,
-      imageUrl: body.imageUrl
-        ? (body.imageUrl.startsWith("http")
-            ? body.imageUrl
-            : `${protocol}://${host}${body.imageUrl}`)
-        : "",
+//     const res = NextResponse.json(booksWithFullUrl, { status: 200 });
+//     return withCORS(res, req);
+//   } catch (error) {
+//     console.error("❌ GET Error:", error);
+//     const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+//     return withCORS(res, req);
+//   }
+// }
 
-      pdfUrl: body.pdfUrl
-        ? (body.pdfUrl.startsWith("http")
-            ? body.pdfUrl
-            : `${protocol}://${host}${body.pdfUrl}`)
-        : "",
+// // ✅ POST handler
+// export async function POST(req: NextRequest) {
+//   try {
+//     await connectToDatabase();
+//     const body = await req.json();
 
-      promoImageUrl: body.promoImageUrl
-        ? (body.promoImageUrl.startsWith("http")
-            ? body.promoImageUrl
-            : `${protocol}://${host}${body.promoImageUrl}`)
-        : "",
-    });
+//     const host = req.headers.get("host") || "frontend-rho-jet-76.vercel.app";
+//     const protocol = req.headers.get("x-forwarded-proto") || "https";
 
-    return withCORS(NextResponse.json(newBook, { status: 201 }), req);
-  } catch (error) {
-    console.error("❌ POST Error:", error);
-    return withCORS(NextResponse.json({ message: "Server Error" }, { status: 500 }), req);
-  }
-}
+//     const newBook = await Book.create({
+//       ...body,
+//       imageUrl: body.imageUrl
+//         ? (body.imageUrl.startsWith("http")
+//             ? body.imageUrl
+//             : `${protocol}://${host}${body.imageUrl}`)
+//         : "",
+//       pdfUrl: body.pdfUrl
+//         ? (body.pdfUrl.startsWith("http")
+//             ? body.pdfUrl
+//             : `${protocol}://${host}${body.pdfUrl}`)
+//         : "",
+//       promoImageUrl: body.promoImageUrl
+//         ? (body.promoImageUrl.startsWith("http")
+//             ? body.promoImageUrl
+//             : `${protocol}://${host}${body.promoImageUrl}`)
+//         : "",
+//     });
 
-// ✅ OPTIONS handler
-export async function OPTIONS(req: NextRequest) {
-  const response = new NextResponse(null, { status: 204 });
+//     const res = NextResponse.json(newBook, { status: 201 });
+//     return withCORS(res, req);
+//   } catch (error) {
+//     console.error("❌ POST Error:", error);
+//     const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+//     return withCORS(res, req);
+//   }
+// }
 
-  return withCORS(response, req);
-}
+// // ✅ DELETE handler
+// export async function DELETE(req: NextRequest) {
+//   try {
+//     await connectToDatabase();
+
+//     const { searchParams } = new URL(req.url);
+//     const id = searchParams.get("id");
+
+//     if (!id) {
+//       const res = NextResponse.json({ message: "Missing book ID" }, { status: 400 });
+//       return withCORS(res, req);
+//     }
+
+//     const deletedBook = await Book.findByIdAndDelete(id);
+
+//     if (!deletedBook) {
+//       const res = NextResponse.json({ message: "Book not found" }, { status: 404 });
+//       return withCORS(res, req);
+//     }
+
+//     const res = NextResponse.json({ message: "Book deleted successfully" }, { status: 200 });
+//     return withCORS(res, req);
+//   } catch (error) {
+//     console.error("❌ DELETE Error:", error);
+//     const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+//     return withCORS(res, req);
+//   }
+// }
 
 
 // // app/api/booklibrary/route.ts
@@ -232,3 +276,168 @@ export async function OPTIONS(req: NextRequest) {
 //     return NextResponse.json({ error: "Error creating book" }, { status: 500 });
 //   }
 // }
+
+
+
+
+
+
+
+// app/api/booklibrary/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { Book } from "@/models/book";
+
+// ✅ Allowed origins (Prod only)
+const allowedOrigins = [
+  "https://frontend-rho-jet-76.vercel.app",    // Admin Dashboard (deployed)
+  "https://book-website-rho-sooty.vercel.app", // Book Website (deployed)
+  "http://localhost:3000",
+  "http://localhost:3001",
+
+];
+
+// ✅ Utility: decide which origin to allow
+function getAllowOrigin(origin: string | null) {
+  if (!origin) return ""; // No CORS header for non-browser/server-to-server
+  // Allow all origins in development
+  if (process.env.NODE_ENV === "development") {
+    console.log("Allowing origin in dev:", origin); // Debugging
+    return origin;
+  }
+  // Strict check for production
+  if (allowedOrigins.includes(origin)) {
+    console.log("Allowing origin in prod:", origin); // Debugging
+    return origin;
+  }
+  console.log("Origin not allowed:", origin); // Debugging
+  return "";
+}
+
+// ✅ CORS helper
+function withCORS(res: NextResponse, req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const allowOrigin = getAllowOrigin(origin);
+
+  if (allowOrigin) {
+    res.headers.set("Access-Control-Allow-Origin", allowOrigin);
+    res.headers.set("Vary", "Origin");
+  }
+  res.headers.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return res;
+}
+
+// ✅ OPTIONS (preflight)
+export async function OPTIONS(req: NextRequest) {
+  const res = new NextResponse(null, { status: 204 });
+  return withCORS(res, req);
+}
+
+// ✅ GET handler
+export async function GET(req: NextRequest) {
+  try {
+    await connectToDatabase();
+
+    const { searchParams } = new URL(req.url);
+    const isFeatured = searchParams.get("featured");
+    const filter = isFeatured === "true" ? { isFeatured: true } : {};
+
+    const books = await Book.find(filter).sort({ createdAt: -1 });
+
+    const host = req.headers.get("host") || "";
+    const protocol = req.headers.get("x-forwarded-proto") || "https";
+
+    const booksWithFullUrl = books.map((book: any) => ({
+      ...book.toObject(),
+      imageUrl: book.imageUrl
+        ? (book.imageUrl.startsWith("http")
+            ? book.imageUrl
+            : `${protocol}://${host}${book.imageUrl}`)
+        : "",
+      pdfUrl: book.pdfUrl
+        ? (book.pdfUrl.startsWith("http")
+            ? book.pdfUrl
+            : `${protocol}://${host}${book.pdfUrl}`)
+        : "",
+      promoImageUrl: book.promoImageUrl
+        ? (book.promoImageUrl.startsWith("http")
+            ? book.promoImageUrl
+            : `${protocol}://${host}${book.promoImageUrl}`)
+        : "",
+    }));
+
+    const res = NextResponse.json(booksWithFullUrl, { status: 200 });
+    return withCORS(res, req);
+  } catch (error) {
+    console.error("❌ GET Error:", error);
+    const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+    return withCORS(res, req);
+  }
+}
+
+// ✅ POST handler
+export async function POST(req: NextRequest) {
+  try {
+    await connectToDatabase();
+    const body = await req.json();
+
+    const host = req.headers.get("host") || "frontend-rho-jet-76.vercel.app";
+    const protocol = req.headers.get("x-forwarded-proto") || "https";
+
+    const newBook = await Book.create({
+      ...body,
+      imageUrl: body.imageUrl
+        ? (body.imageUrl.startsWith("http")
+            ? body.imageUrl
+            : `${protocol}://${host}${body.imageUrl}`)
+        : "",
+      pdfUrl: body.pdfUrl
+        ? (body.pdfUrl.startsWith("http")
+            ? body.pdfUrl
+            : `${protocol}://${host}${body.pdfUrl}`)
+        : "",
+      promoImageUrl: body.promoImageUrl
+        ? (body.promoImageUrl.startsWith("http")
+            ? body.promoImageUrl
+            : `${protocol}://${host}${body.promoImageUrl}`)
+        : "",
+    });
+
+    const res = NextResponse.json(newBook, { status: 201 });
+    return withCORS(res, req);
+  } catch (error) {
+    console.error("❌ POST Error:", error);
+    const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+    return withCORS(res, req);
+  }
+}
+
+// ✅ DELETE handler
+export async function DELETE(req: NextRequest) {
+  try {
+    await connectToDatabase();
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      const res = NextResponse.json({ message: "Missing book ID" }, { status: 400 });
+      return withCORS(res, req);
+    }
+
+    const deletedBook = await Book.findByIdAndDelete(id);
+
+    if (!deletedBook) {
+      const res = NextResponse.json({ message: "Book not found" }, { status: 404 });
+      return withCORS(res, req);
+    }
+
+    const res = NextResponse.json({ message: "Book deleted successfully" }, { status: 200 });
+    return withCORS(res, req);
+  } catch (error) {
+    console.error("❌ DELETE Error:", error);
+    const res = NextResponse.json({ message: "Server Error" }, { status: 500 });
+    return withCORS(res, req);
+  }
+}

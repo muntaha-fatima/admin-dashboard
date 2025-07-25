@@ -39,6 +39,7 @@ const nextConfig: import('next').NextConfig = {
   images: {
     domains: [
       "frontend-rho-jet-76.vercel.app",
+      "localhost:3001"
     ],
   },
 };

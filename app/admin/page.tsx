@@ -712,6 +712,10 @@
 
 
 
+
+
+
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -722,31 +726,30 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, Library } from "lucide-react";
+import { BookOpen, Plus, Library, Trash2 } from "lucide-react";
 
 type Book = {
   _id?: string;
   title: string;
   author: string;
   description: string;
-  imageUrl: string;         // Main book cover image
-  pdfUrl: string;           // PDF Link
-  promoImageUrl?: string;   // 👈 NEW: Promo/Banner Image (for homepage)
+  imageUrl: string;
+  pdfUrl: string;
+  promoImageUrl?: string;
   isFeatured: boolean;
 };
 
-
 export default function AdminDashboard() {
-const [book, setBook] = useState<Book>({
-  title: "",
-  author: "",
-  description: "",
-  imageUrl: "",
-  pdfUrl: "",
-  promoImageUrl:"",
-  isFeatured: false, // ✅ Add this line
-});
-
+  const [book, setBook] = useState<any>({
+    type: "book",
+    title: "",
+    author: "",
+    description: "",
+    imageUrl: "",
+    pdfUrl: "",
+    promoImageUrl: "",
+    isFeatured: false,
+  });
 
   const [loading, setLoading] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
@@ -769,27 +772,65 @@ const [book, setBook] = useState<Book>({
     fetchBooks();
   }, []);
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  setBook({ ...book, [e.target.name]: e.target.value });
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setBook({ ...book, [e.target.name]: e.target.value });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/booklibrary?id=${id}`, {
+        method: "DELETE",
+      });
+      toast.success("Book deleted successfully");
+      fetchBooks();
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    const isImageOnly = book.type === "image";
+
+    // Basic validation
+    if (isImageOnly && !book.promoImageUrl) {
+      toast.error("⚠️ Promo Image URL required for image type");
+      setLoading(false);
+      return;
+    }
+    if (!isImageOnly && (!book.title || !book.author || !book.imageUrl || !book.pdfUrl)) {
+      toast.error("⚠️ Please fill all required book fields");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch("http://localhost:3001/api/booklibrary", {
+      const res = await fetch("http://localhost:3000/api/booklibrary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(book),
       });
 
       if (res.ok) {
-        toast.success("📘 Book added!");
-        setBook({ title: "", author: "", description: "", imageUrl: "", pdfUrl: "" , isFeatured:false});
+        toast.success("✅ Added successfully!");
+        setBook({
+          type: "book",
+          title: "",
+          author: "",
+          description: "",
+          imageUrl: "",
+          pdfUrl: "",
+          promoImageUrl: "",
+          isFeatured: false,
+        });
         fetchBooks();
-      } else toast.error("Failed to add book");
+      } else {
+        toast.error("❌ Failed to add");
+      }
     } catch (err) {
-      toast.error("Something went wrong");
+      toast.error("❌ Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -798,7 +839,7 @@ const [book, setBook] = useState<Book>({
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64  bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 hover:bg-slate-50 text-white -scroll-mt-96 border-r p-6 space-y-6 shadow-sm">
+      <aside className="w-64 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white border-r p-6 space-y-6 shadow-sm">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Library className="w-5 h-5" /> Admin Panel
         </h2>
@@ -822,48 +863,57 @@ const [book, setBook] = useState<Book>({
         {/* Form Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Add New Book</CardTitle>
-            <CardDescription>Enter book details to add it to your library</CardDescription>
+            <CardTitle>Add New Book / Promo Image</CardTitle>
+            <CardDescription>Select type and enter related fields.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-  { label: "Title", name: "title" },
-  { label: "Author", name: "author" },
-  { label: "Description", name: "description" },
-  { label: "Image URL", name: "imageUrl" },
-  { label: "PDF URL", name: "pdfUrl" },
-  { label: "Promo Image URL", name: "promoImageUrl" }, // 👈 NEW
-].map(({ label, name }) => (
-  <div key={name} className="grid gap-1.5">
-    <Label htmlFor={name}>{label}</Label>
-    <Input
-      id={name}
-      name={name}
-      onChange={handleChange}
-      required={name !== "promoImageUrl"} // promo image optional
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-))}
+              {/* Type Selector */}
+              <div className="col-span-full">
+                <Label htmlFor="type">Select Type</Label>
+                <select
+                  name="type"
+                  id="type"
+                  className="border rounded p-2 w-full"
+                  value={book.type}
+                  onChange={handleChange}
+                >
+                  <option value="book">📖 Book</option>
+                  <option value="image">🖼️ Promo Image</option>
+                </select>
+              </div>
+
+              {/* Show only if type === 'book' */}
+              {book.type === "book" && (
+                <>
+                  <InputField name="title" label="Title" value={book.title} onChange={handleChange} required />
+                  <InputField name="author" label="Author" value={book.author} onChange={handleChange} required />
+                  <InputField name="description" label="Description" value={book.description} onChange={handleChange} />
+                  <InputField name="imageUrl" label="Image URL" value={book.imageUrl} onChange={handleChange} required />
+                  <InputField name="pdfUrl" label="PDF URL" value={book.pdfUrl} onChange={handleChange} required />
+                </>
+              )}
+
+              {/* Always show for both types */}
+              <InputField name="promoImageUrl" label="Promo Image URL" value={book.promoImageUrl} onChange={handleChange} required={book.type === "image"} />
 
               <div className="col-span-full">
-  <Label htmlFor="isFeatured">Show on Home Page?</Label>
-  <div className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      id="isFeatured"
-      name="isFeatured"
-      checked={book.isFeatured}
-      onChange={(e) => setBook({ ...book, isFeatured: e.target.checked })}
-    />
-    <span className="text-sm text-gray-700">Yes, display on homepage</span>
-  </div>
-</div>
+                <Label htmlFor="isFeatured">Show on Home Page?</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isFeatured"
+                    name="isFeatured"
+                    checked={book.isFeatured}
+                    onChange={(e) => setBook({ ...book, isFeatured: e.target.checked })}
+                  />
+                  <span className="text-sm text-gray-700">Yes, display on homepage</span>
+                </div>
+              </div>
 
               <div className="col-span-full">
-                <Button type="submit" disabled={loading} className="w-full  bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl ">
-                  {loading ? "Uploading..." : "Upload Book"}
+                <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 text-lg rounded-2xl shadow-xl">
+                  {loading ? "Uploading..." : "Submit"}
                 </Button>
               </div>
             </form>
@@ -872,9 +922,9 @@ const [book, setBook] = useState<Book>({
 
         {/* Book List */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold">📖 All Books</h2>
+          <h2 className="text-2xl font-bold">📖 All Entries</h2>
           {books.length === 0 ? (
-            <p className="text-muted-foreground">No books added yet.</p>
+            <p className="text-muted-foreground">No entries yet.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {books.map((b) => (
@@ -902,12 +952,41 @@ const [book, setBook] = useState<Book>({
                       )}
                     </div>
                   </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => b._id && handleDelete(b._id)}
+                  >
+                    Delete
+                  </Button>
                 </Card>
               ))}
             </div>
           )}
         </section>
       </main>
+    </div>
+  );
+}
+
+// 👇 Custom InputField component for reuse
+function InputField({ name, label, value, onChange, required = false }: {
+  name: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={name}>{label}</Label>
+      <Input
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
     </div>
   );
 }
