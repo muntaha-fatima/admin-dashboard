@@ -2828,7 +2828,7 @@ export default function AdminDashboard() {
                       className="mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 px-6 rounded-xl shadow-md"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add First Content
+                     
                     </Button>
                   )}
                 </Card>
