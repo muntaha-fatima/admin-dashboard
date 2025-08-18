@@ -321,7 +321,7 @@
 
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import { Book } from "../../../models/book"
+import { Book } from "../../../models/Book"
 import { Promo } from "../../../models/promoimage" // Assuming this path is correct for your Mongoose Promo model
 
 // ✅ Allowed origins (Prioritizing Admin Dashboard)
