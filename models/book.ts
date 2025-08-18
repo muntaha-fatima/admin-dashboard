@@ -1,5 +1,3 @@
-// models/Book.ts
-
 
 import mongoose, { Schema } from "mongoose";
 
