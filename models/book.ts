@@ -1,4 +1,6 @@
 // models/Book.ts
+
+
 import mongoose, { Schema } from "mongoose";
 
 const bookSchema = new Schema(
@@ -9,7 +11,6 @@ const bookSchema = new Schema(
     imageUrl: String,
     pdfUrl: String,
   
-   promoImageUrl: { type: String, default: "" }, // ✅ ADD THIS LINE
     isFeatured: { type: Boolean, default: false },
   },
   { timestamps: true }
