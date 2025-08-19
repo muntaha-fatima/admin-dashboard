@@ -2068,52 +2068,52 @@ export default function AdminDashboard() {
     setActiveTab("view")
     toast.info("❌ Edit cancelled")
   }
-const handleBookSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  
+  const handleBookSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    // Sirf book ki zaroori fields ko nikalen
-    const { title, author, description, imageUrl, pdfUrl, isFeatured } = newBookFormData;
+  // Yahan, aik naya object banayen aur is mein sirf book ki fields shamil karen
+  const cleanedBookData = {
+    contentType: "book",
+    title: newBookFormData.title,
+    author: newBookFormData.author,
+    description: newBookFormData.description,
+    imageUrl: newBookFormData.imageUrl,
+    pdfUrl: newBookFormData.pdfUrl,
+    isFeatured: newBookFormData.isFeatured,
+  };
 
-    if (!title || !author || !imageUrl || !pdfUrl) {
-        toast.error("⚠️ All book fields are required");
-        setLoading(false);
-        return;
-    }
-
-    // Yahan aik naya, saaf object banayen
-    const cleanedDataToSubmit = {
-        contentType: "book", // Yeh zaroori hai
-        title,
-        author,
-        description,
-        imageUrl,
-        pdfUrl,
-        isFeatured,
-    };
+  // Check karen ke book ki fields bhari hui hain ya nahi
+  const { title, author, imageUrl, pdfUrl } = cleanedBookData;
+  if (!title || !author || !imageUrl || !pdfUrl) {
+    toast.error("⚠️ All book fields are required");
+    setLoading(false);
+    return;
+  }
     
-    try {
-        const method = "POST"; // Book add kar rahi hain, to POST hi hoga.
-        const endpoint = "/api/booklibrary";
+  try {
+    const method = isEditMode ? "PUT" : "POST";
+    const endpoint = "/api/booklibrary" + (isEditMode ? `?id=${editingBook?._id}&contentType=book` : "");
 
-        const res = await fetch(endpoint, {
-            method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(cleanedDataToSubmit), // Saaf object bhejain
-        });
+    const res = await fetch(endpoint, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(cleanedBookData), // Sirf saaf data bhejain
+    });
 
-        if (!res.ok) throw new Error("Failed to save book");
-        toast.success(`✅ Book added successfully`);
-        fetchContents();
-        handleCancelEdit();
-    } catch (err) {
-        toast.error("❌ Failed to save book");
-        console.error("Book submit error:", err);
-    } finally {
-        setLoading(false);
-    }
+    if (!res.ok) throw new Error("Failed to save book");
+    toast.success(`✅ Book ${isEditMode ? "updated" : "added"} successfully`);
+    fetchContents();
+    handleCancelEdit();
+  } catch (err) {
+    toast.error("❌ Failed to save book");
+    console.error("Book submit error:", err);
+  } finally {
+    setLoading(false);
+  }
 };
   const handlePromoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
