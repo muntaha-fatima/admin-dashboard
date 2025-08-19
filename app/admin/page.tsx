@@ -2068,48 +2068,59 @@ export default function AdminDashboard() {
     setActiveTab("view")
     toast.info("❌ Edit cancelled")
   }
+const handleBookSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const handleBookSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    const dataToSubmit = isEditMode && editingBook ? editingBook : newBookFormData
-    const { title, author, imageUrl, pdfUrl } = dataToSubmit
+    // Sirf book ki zaroori fields ko nikalen
+    const { title, author, description, imageUrl, pdfUrl, isFeatured } = newBookFormData;
 
     if (!title || !author || !imageUrl || !pdfUrl) {
-      toast.error("⚠️ All book fields are required")
-      setLoading(false)
-      return
+        toast.error("⚠️ All book fields are required");
+        setLoading(false);
+        return;
     }
+
+    // Yahan aik naya, saaf object banayen
+    const cleanedDataToSubmit = {
+        contentType: "book", // Yeh zaroori hai
+        title,
+        author,
+        description,
+        imageUrl,
+        pdfUrl,
+        isFeatured,
+    };
+    
     try {
-      const method = isEditMode ? "PUT" : "POST"
-      const endpoint = "/api/booklibrary" + (isEditMode ? `?id=${editingBook?._id}&contentType=book` : "")
+        const method = "POST"; // Book add kar rahi hain, to POST hi hoga.
+        const endpoint = "/api/booklibrary";
 
-      const res = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSubmit),
-      })
-      if (!res.ok) throw new Error("Failed to save book")
-      toast.success(`✅ Book ${isEditMode ? "updated" : "added"} successfully`)
-      fetchContents()
-      handleCancelEdit()
+        const res = await fetch(endpoint, {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(cleanedDataToSubmit), // Saaf object bhejain
+        });
+
+        if (!res.ok) throw new Error("Failed to save book");
+        toast.success(`✅ Book added successfully`);
+        fetchContents();
+        handleCancelEdit();
     } catch (err) {
-      toast.error("❌ Failed to save book")
-      console.error("Book submit error:", err)
+        toast.error("❌ Failed to save book");
+        console.error("Book submit error:", err);
     } finally {
-      setLoading(false)
+        setLoading(false);
     }
-  }
-
+};
   const handlePromoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const dataToSubmit = isEditMode && editingPromo ? editingPromo : newPromoFormData;
-    const { promoImageUrl } = dataToSubmit;
+    // Sirf promo ki zaroori fields ko nikalen
+    const { promoImageUrl, isActive, title } = newPromoFormData;
 
     if (!promoImageUrl) {
         toast.error("⚠️ Promotional image URL is required");
@@ -2117,20 +2128,28 @@ export default function AdminDashboard() {
         return;
     }
 
+    // Yahan aik naya, saaf object banayen
+    const cleanedDataToSubmit = {
+      contentType: "image", // Yeh zaroori hai
+      promoImageUrl,
+      isActive,
+      title,
+    };
+    
     try {
-        const method = isEditMode ? "PUT" : "POST";
-        const endpoint = "/api/booklibrary" + (isEditMode ? `?id=${editingPromo?._id}&contentType=image` : "");
+        const method = "POST"; // Promo add kar rahi hain, to POST hi hoga.
+        const endpoint = "/api/booklibrary";
+        
         const res = await fetch(endpoint, {
             method,
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(dataToSubmit),
+            body: JSON.stringify(cleanedDataToSubmit), // Saaf object bhejain
         });
 
         if (!res.ok) throw new Error("Failed to save promo image");
-
-        toast.success(`✅ Promo image ${isEditMode ? "updated" : "added"} successfully`);
+        toast.success(`✅ Promo image added successfully`);
         fetchContents();
         handleCancelEdit();
     } catch (err) {
@@ -2140,7 +2159,6 @@ export default function AdminDashboard() {
         setLoading(false);
     }
 };
-
   const EnhancedInputField = ({ name, label, value, onChange, required, icon, ...rest }: any) => (
     <div className="space-y-2 relative">
       <Label htmlFor={name} className="text-base font-semibold text-slate-700">{label}</Label>
