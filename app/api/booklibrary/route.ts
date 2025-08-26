@@ -844,7 +844,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-
 export async function GET(req: NextRequest) {
     try {
         await connectToDatabase();
