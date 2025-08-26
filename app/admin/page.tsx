@@ -1836,346 +1836,270 @@
 //   }
 
 
+"use client";
 
-"use client"
+import React, { useState, useEffect, ChangeEvent, FormEvent, JSX } from "react";
+import { toast } from "sonner";
+import { Library, BookOpen, ImageIcon, Edit, Trash2, X, Plus, Users, FileText, Upload, Star, Search, Save, Eye } from "lucide-react"; // 'Eye' icon add kiya hai
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
-import type React from "react"
-import { useState, useEffect, useMemo } from "react"
-import { toast } from "sonner"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  BookOpen,
-  Plus,
-  Library,
-  Trash2,
-  Upload,
-  Eye,
-  Star,
-  ImageIcon,
-  FileText,
-  Users,
-  Search,
-  Edit,
-  X,
-  Save,
-} from "lucide-react"
-
-// Ensure these interfaces are correctly defined in your models
 interface Book {
-  _id?: string
-  title: string
-  author: string
-  description: string
-  imageUrl: string
-  pdfUrl: string
-  isFeatured: boolean
-  contentType: "book"
+  _id?: string;
+  title: string;
+  author: string;
+  description: string;
+  imageUrl: string;
+  pdfUrl: string;
+  isFeatured: boolean;
+  contentType: "book";
 }
 
 interface Promo {
-  _id?: string
-  promoImageUrl: string
-  isActive: boolean
-  title?: string
-  contentType: "image"
+  _id?: string;
+  promoImageUrl: string;
+  isActive: boolean;
+  title: string;
+  contentType: "image";
 }
 
-type Content = Book | Promo
+type Content = Book | Promo;
 
-export default function AdminDashboard() {
-  const [newBookFormData, setNewBookFormData] = useState<Book>({
-    contentType: "book",
-    title: "",
-    author: "",
-    description: "",
-    imageUrl: "",
-    pdfUrl: "",
-    isFeatured: false,
-  })
-  const [newPromoFormData, setNewPromoFormData] = useState<Promo>({
-    contentType: "image",
-    promoImageUrl: "",
-    isActive: false,
-    title: "Promotional Image",
-  })
-  const [currentNewContentType, setCurrentNewContentType] = useState<"book" | "image">("book")
-
-  const [editingBook, setEditingBook] = useState<Book | null>(null)
-  const [editingPromo, setEditingPromo] = useState<Promo | null>(null)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [currentEditingType, setCurrentEditingType] = useState<"book" | "image" | null>(null)
-
-  const [loading, setLoading] = useState(false)
-  const [books, setBooks] = useState<Book[]>([])
-  const [promoImages, setPromoImages] = useState<Promo[]>([])
-  const [activeTab, setActiveTab] = useState<"add" | "view">("add")
-  const [searchTerm, setSearchTerm] = useState("")
-
-  const fetchContents = async () => {
-    try {
-      console.log("📡 Fetching content from /api/booklibrary")
-      const res = await fetch("/api/booklibrary", { cache: "no-store" })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || "Failed to fetch content")
-
-      console.log("✅ Raw data fetched from API:", data)
-      if (Array.isArray(data)) {
-        const fetchedBooks: Book[] = []
-        const fetchedPromoImages: Promo[] = []
-
-        data.forEach((item: Content) => {
-          if (item.contentType === "book") {
-            fetchedBooks.push(item as Book)
-          } else if (item.contentType === "image") {
-            fetchedPromoImages.push(item as Promo)
-          }
-        })
-        setBooks(fetchedBooks.reverse())
-        setPromoImages(fetchedPromoImages.reverse())
-      }
-    } catch (err) {
-      toast.error("⚠️ Error fetching content")
-      console.error("Fetch error:", err)
-    }
-  }
-
-  useEffect(() => {
-    fetchContents()
-  }, [])
-
-  // Use useMemo for efficient filtering and combining of content
-  const filteredContents = useMemo(() => {
-    const allContent = [...books, ...promoImages];
-    if (!searchTerm) {
-      return allContent;
-    }
-    const lowercasedTerm = searchTerm.toLowerCase();
-    return allContent.filter(content => {
-      if (content.contentType === "book") {
-        return content.title.toLowerCase().includes(lowercasedTerm) ||
-               content.author.toLowerCase().includes(lowercasedTerm);
-      } else {
-        return content.title?.toLowerCase().includes(lowercasedTerm);
-      }
-    });
-  }, [books, promoImages, searchTerm]);
-  
-  // Handlers for new book form
-  const handleNewBookChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setNewBookFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleNewBookCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewBookFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))
-  }
-
-  // Handlers for new promo form
-  const handleNewPromoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setNewPromoFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleNewPromoCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewPromoFormData((prev) => ({ ...prev, isActive: e.target.checked }))
-  }
-
-  // Handlers for editing book
-  const handleEditingBookChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setEditingBook((prev) => (prev ? { ...prev, [name]: value } : prev))
-  }
-
-  const handleEditingBookCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingBook((prev) => (prev ? { ...prev, isFeatured: e.target.checked } : prev))
-  }
-
-  // Handlers for editing promo
-  const handleEditingPromoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setEditingPromo((prev) => (prev ? { ...prev, [name]: value } : prev))
-  }
-
-  const handleEditingPromoCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditingPromo((prev) => (prev ? { ...prev, isActive: e.target.checked } : prev))
-  }
-
-  const handleContentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as "book" | "image"
-    if (isEditMode) {
-      toast.error("Cannot change content type in edit mode.")
-      return
-    }
-    setCurrentNewContentType(newType)
-  }
-
-  const handleDelete = async (id: string, contentType: "book" | "image") => {
-    if (!confirm(`Are you sure you want to delete this ${contentType}?`)) return
-    try {
-      const res = await fetch(`/api/booklibrary?id=${id}&contentType=${contentType}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete")
-      toast.success(`✅ ${contentType} deleted successfully`)
-      fetchContents() // Refresh data
-    } catch (error) {
-      toast.error(`❌ Failed to delete ${contentType}`)
-      console.error("Delete error:", error)
-    }
-  }
-
-  const handleEdit = (contentToEdit: Content) => {
-    setIsEditMode(true)
-    setCurrentEditingType(contentToEdit.contentType)
-    if (contentToEdit.contentType === "book") {
-      setEditingBook(contentToEdit as Book)
-      setEditingPromo(null)
-    } else {
-      setEditingPromo(contentToEdit as Promo)
-      setEditingBook(null)
-    }
-    setActiveTab("add")
-    toast.info(`📝 Edit mode activated for ${contentToEdit.contentType}`)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingBook(null)
-    setEditingPromo(null)
-    setIsEditMode(false)
-    setCurrentEditingType(null)
-
-    setNewBookFormData({
-      contentType: "book",
-      title: "",
-      author: "",
-      description: "",
-      imageUrl: "",
-      pdfUrl: "",
-      isFeatured: false,
-    })
-
-    setNewPromoFormData({
-      contentType: "image",
-      promoImageUrl: "",
-      isActive: false,
-      title: "Promotional Image",
-    })
-
-    setActiveTab("view")
-    toast.info("❌ Edit cancelled")
-  }
-  
-  const handleBookSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-
-  // Yahan, aik naya object banayen aur is mein sirf book ki fields shamil karen
-  const cleanedBookData = {
-    contentType: "book",
-    title: newBookFormData.title,
-    author: newBookFormData.author,
-    description: newBookFormData.description,
-    imageUrl: newBookFormData.imageUrl,
-    pdfUrl: newBookFormData.pdfUrl,
-    isFeatured: newBookFormData.isFeatured,
-  };
-
-  // Check karen ke book ki fields bhari hui hain ya nahi
-  const { title, author, imageUrl, pdfUrl } = cleanedBookData;
-  if (!title || !author || !imageUrl || !pdfUrl) {
-    toast.error("⚠️ All book fields are required");
-    setLoading(false);
-    return;
-  }
-    
-  try {
-    const method = isEditMode ? "PUT" : "POST";
-    const endpoint = "/api/booklibrary" + (isEditMode ? `?id=${editingBook?._id}&contentType=book` : "");
-
-    const res = await fetch(endpoint, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(cleanedBookData), // Sirf saaf data bhejain
-    });
-
-    if (!res.ok) throw new Error("Failed to save book");
-    toast.success(`✅ Book ${isEditMode ? "updated" : "added"} successfully`);
-    fetchContents();
-    handleCancelEdit();
-  } catch (err) {
-    toast.error("❌ Failed to save book");
-    console.error("Book submit error:", err);
-  } finally {
-    setLoading(false);
-  }
+const initialBookState: Book = {
+  title: "",
+  author: "",
+  description: "",
+  imageUrl: "",
+  pdfUrl: "",
+  isFeatured: false,
+  contentType: "book",
 };
-  const handlePromoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
 
-    // Sirf promo ki zaroori fields ko nikalen
-    const { promoImageUrl, isActive, title } = newPromoFormData;
-
-    if (!promoImageUrl) {
-        toast.error("⚠️ Promotional image URL is required");
-        setLoading(false);
-        return;
-    }
-
-    // Yahan aik naya, saaf object banayen
-    const cleanedDataToSubmit = {
-      contentType: "image", // Yeh zaroori hai
-      promoImageUrl,
-      isActive,
-      title,
-    };
-    
-    try {
-        const method = "POST"; // Promo add kar rahi hain, to POST hi hoga.
-        const endpoint = "/api/booklibrary";
-        
-        const res = await fetch(endpoint, {
-            method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(cleanedDataToSubmit), // Saaf object bhejain
-        });
-
-        if (!res.ok) throw new Error("Failed to save promo image");
-        toast.success(`✅ Promo image added successfully`);
-        fetchContents();
-        handleCancelEdit();
-    } catch (err) {
-        toast.error("❌ Failed to save promo image");
-        console.error("Promo submit error:", err);
-    } finally {
-        setLoading(false);
-    }
+const initialPromoState: Promo = {
+  promoImageUrl: "",
+  isActive: true,
+  title: "",
+  contentType: "image",
 };
-  const EnhancedInputField = ({ name, label, value, onChange, required, icon, ...rest }: any) => (
-    <div className="space-y-2 relative">
-      <Label htmlFor={name} className="text-base font-semibold text-slate-700">{label}</Label>
-      {icon && <div className="absolute left-3 top-1/2 transform -translate-y-1/2 mt-3">{icon}</div>}
+
+// Custom Input Field Component
+const EnhancedInputField = ({
+  label,
+  name,
+  value,
+  onChange,
+  required,
+  icon,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+  icon: JSX.Element;
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={name} className="text-base font-semibold text-slate-700">
+      {label}
+    </Label>
+    <div className="relative">
       <Input
-        type="text"
         id={name}
         name={name}
         value={value}
         onChange={onChange}
         required={required}
-        className="w-full border border-slate-300 rounded-lg p-3 pl-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-700"
-        {...rest}
+        className="pl-10 border-slate-300 focus:ring-blue-500 focus:border-transparent transition-all"
       />
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
+        {icon}
+      </div>
     </div>
-  );
+  </div>
+);
 
+export default function AdminDashboard() {
+  const [allContent, setAllContent] = useState<Content[]>([]);
+  const [formData, setFormData] = useState<Content>(initialBookState);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("add");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  
+  const isBook = (content: Content): content is Book => {
+    return content.contentType === "book";
+  };
+
+  const isPromo = (content: Content): content is Promo => {
+    return content.contentType === "image";
+  };
+
+  const fetchContents = async () => {
+    try {
+      const res = await fetch("/api/booklibrary", { cache: "no-store" });
+      const data = await res.json();
+      if (data.data) {
+        setAllContent(data.data);
+        
+      }
+    } catch (error) {
+      console.error("Failed to fetch content:", error);
+    }
+  };
+useEffect(() => {
+    fetchContents(); // ✅ Data fetch karne ke liye function call karein
+}, []); // ✅ Dependency array ko khali rakhen
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
+
+  const handleContentTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const newContentType = e.target.value as "book" | "image";
+    setFormData(newContentType === "book" ? initialBookState : initialPromoState);
+  };
+
+
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+
+  const method = isEditMode ? "PUT" : "POST";
+  const endpoint = isEditMode
+    ? `/api/booklibrary?id=${formData._id}`
+    : "/api/booklibrary";
+
+  let payload: Partial<Book> | Partial<Promo>;
+
+  if (isBook(formData)) {
+    // 📚 Book payload
+    payload = {
+      title: formData.title,
+      author: formData.author,
+      description: formData.description,
+      imageUrl: formData.imageUrl,
+      pdfUrl: formData.pdfUrl,
+      isFeatured: formData.isFeatured,
+      contentType: "book",
+    };
+
+    if (!payload.title || !payload.author || !payload.imageUrl || !payload.pdfUrl) {
+      toast.error("⚠️ All book fields are required.");
+      setLoading(false);
+      return;
+    }
+  } else {
+    // 🖼️ Promo payload
+    payload = {
+      promoImageUrl: formData.promoImageUrl,
+      isActive: formData.isActive,
+      title: formData.title,
+      contentType: "image",
+    };
+
+    if (!payload.promoImageUrl) {
+      toast.error("⚠️ Promotional image URL is required.");
+      setLoading(false);
+      return;
+    }
+  }
+
+  console.log("📤 Sending payload to API:", payload);
+
+  try {
+    const res = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(
+        errorData.message || `Failed to ${isEditMode ? "update" : "add"} content.`
+      );
+    }
+
+    toast.success(`✅ Content ${isEditMode ? "updated" : "added"} successfully.`);
+    fetchContents(); // 🔄 Refresh data after submit
+    handleCancelEdit();
+  } catch (err) {
+    if (err instanceof Error) {
+      toast.error(`❌ Failed to save content: ${err.message}`);
+      console.error("Submit error:", err);
+    } else {
+      toast.error("❌ An unknown error occurred.");
+      console.error("Submit error:", err);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleEdit = (item: Content) => {
+    setFormData(item);
+    setIsEditMode(true);
+    setActiveTab("add");
+  };
+
+  const handleDelete = async (id: string, contentType: "book" | "image") => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this content?");
+    if (!isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/booklibrary?id=${id}&contentType=${contentType}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to delete content.");
+      }
+
+      toast.success("✅ Content deleted successfully.");
+      fetchContents();
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(`❌ Failed to delete content: ${err.message}`);
+        console.error("Delete error:", err);
+      } else {
+        toast.error("❌ An unknown error occurred.");
+        console.error("Delete error:", err);
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setFormData(initialBookState);
+    setIsEditMode(false);
+  };
+
+  const filteredContents = allContent.filter(c => {
+    const title = c.title;
+    const author = isBook(c) ? c.author : "";
+    const searchString = `${title} ${author}`.toLowerCase();
+    // Sirf books ko alag karen
+
+
+    return searchString.includes(searchTerm.toLowerCase());
+  });
+  console.log("Filtered Contents:", filteredContents); // ✅ Yeh line lagayen
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans">
       {/* Sidebar */}
@@ -2196,7 +2120,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-orange-100 text-sm">Editing Mode</p>
                   <p className="font-bold truncate text-lg">
-                    {currentEditingType === "book" ? (editingBook as Book)?.title : (editingPromo as Promo)?.title || "Promo Image"}
+                    {formData.title || "Untitled"}
                   </p>
                 </div>
                 <Edit className="w-6 h-6 text-orange-200" />
@@ -2208,7 +2132,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm">Total Entries</p>
-                  <p className="text-2xl font-bold">{books.length + promoImages.length}</p>
+                  <p className="text-2xl font-bold">{allContent.length}</p>
                 </div>
                 <BookOpen className="w-8 h-8 text-blue-200 opacity-70" />
               </div>
@@ -2217,7 +2141,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm">Books</p>
-                  <p className="text-2xl font-bold">{books.length}</p>
+                  <p className="text-2xl font-bold">{allContent.filter(c => c.contentType === "book").length}</p>
                 </div>
                 <BookOpen className="w-8 h-8 text-purple-200 opacity-70" />
               </div>
@@ -2226,7 +2150,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm">Promo Images</p>
-                  <p className="text-2xl font-bold">{promoImages.length}</p>
+                  <p className="text-2xl font-bold">{allContent.filter(c => c.contentType === "image").length}</p>
                 </div>
                 <ImageIcon className="w-8 h-8 text-green-200 opacity-70" />
               </div>
@@ -2235,7 +2159,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-100 text-sm">Featured</p>
-                  <p className="text-2xl font-bold">{books.filter(b => b.isFeatured).length}</p>
+                  <p className="text-2xl font-bold">{allContent.filter(c => isBook(c) && c.isFeatured).length}</p>
                 </div>
                 <Star className="w-8 h-8 text-yellow-200 opacity-70" />
               </div>
@@ -2244,11 +2168,9 @@ export default function AdminDashboard() {
         </div>
         <nav className="p-6 space-y-2 flex-1">
           <button
-            onClick={() => setActiveTab("add")}
+            onClick={() => { setActiveTab("add"); handleCancelEdit(); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              activeTab === "add"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-slate-600 hover:bg-slate-100"
+              activeTab === "add" ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
             {isEditMode ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
@@ -2257,9 +2179,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("view")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              activeTab === "view"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                : "text-slate-600 hover:bg-slate-100"
+              activeTab === "view" ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
             <Eye className="w-5 h-5" />
@@ -2290,7 +2210,7 @@ export default function AdminDashboard() {
               <p className="text-slate-600 mt-1">
                 {activeTab === "add"
                   ? isEditMode
-                    ? `Editing: ${currentEditingType === "book" ? (editingBook as Book)?.title : (editingPromo as Promo)?.title || "Promo Image"}`
+                    ? `Editing: ${isBook(formData) ? formData.title : formData.title || "Untitled"}`
                     : "Add books or promotional images to your library"
                   : "Manage your books and promotional images"}
               </p>
@@ -2323,10 +2243,7 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-8">
-                <form
-                  onSubmit={currentNewContentType === "book" ? handleBookSubmit : handlePromoSubmit}
-                  className="space-y-8"
-                >
+                <form onSubmit={handleSubmit} className="space-y-8">
                   <div className="space-y-2">
                     <Label htmlFor="contentType" className="text-base font-semibold text-slate-700">
                       Content Type
@@ -2335,7 +2252,7 @@ export default function AdminDashboard() {
                       name="contentType"
                       id="contentType"
                       className="w-full border border-slate-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-700"
-                      value={currentNewContentType || ""}
+                      value={formData.contentType}
                       onChange={handleContentTypeChange}
                       disabled={isEditMode}
                     >
@@ -2343,64 +2260,69 @@ export default function AdminDashboard() {
                       <option value="image">🖼️ Promotional Image</option>
                     </select>
                   </div>
-                  {currentNewContentType === "book" ? (
+                  {isBook(formData) ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <EnhancedInputField
                         name="title"
                         label="Book Title"
-                        value={(isEditMode ? editingBook?.title : newBookFormData.title) || ""}
-                        onChange={isEditMode ? handleEditingBookChange : handleNewBookChange}
+                        value={formData.title}
+                        onChange={handleInputChange}
                         required
                         icon={<BookOpen className="w-4 h-4 text-slate-500" />}
                       />
                       <EnhancedInputField
                         name="author"
                         label="Author Name"
-                        value={(isEditMode ? editingBook?.author : newBookFormData.author) || ""}
-                        onChange={isEditMode ? handleEditingBookChange : handleNewBookChange}
+                        value={formData.author}
+                        onChange={handleInputChange}
                         required
                         icon={<Users className="w-4 h-4 text-slate-500" />}
                       />
                       <div className="md:col-span-2">
-                        <EnhancedInputField
-                          name="description"
-                          label="Description"
-                          value={(isEditMode ? editingBook?.description : newBookFormData.description) || ""}
-                          onChange={isEditMode ? handleEditingBookChange : handleNewBookChange}
-                          icon={<FileText className="w-4 h-4 text-slate-500" />}
-                        />
+                        <div className="space-y-2 relative">
+                          <Label htmlFor="description" className="text-base font-semibold text-slate-700">Description</Label>
+                          <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full border border-slate-300 rounded-lg p-3 pl-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-700 min-h-[100px]"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 mt-3"><FileText className="w-4 h-4 text-slate-500" /></div>
+                        </div>
                       </div>
                       <EnhancedInputField
                         name="imageUrl"
                         label="Cover Image URL"
-                        value={(isEditMode ? editingBook?.imageUrl : newBookFormData.imageUrl) || ""}
-                        onChange={isEditMode ? handleEditingBookChange : handleNewBookChange}
+                        value={formData.imageUrl}
+                        onChange={handleInputChange}
                         required
                         icon={<ImageIcon className="w-4 h-4 text-slate-500" />}
                       />
                       <EnhancedInputField
                         name="pdfUrl"
                         label="PDF File URL"
-                        value={(isEditMode ? editingBook?.pdfUrl : newBookFormData.pdfUrl) || ""}
-                        onChange={isEditMode ? handleEditingBookChange : handleNewBookChange}
+                        value={formData.pdfUrl}
+                        onChange={handleInputChange}
                         required
                         icon={<FileText className="w-4 h-4 text-slate-500" />}
                       />
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-6">
                       <EnhancedInputField
                         name="title"
                         label="Promo Title"
-                        value={(isEditMode ? editingPromo?.title : newPromoFormData.title) || "Promotional Image"}
-                        onChange={isEditMode ? handleEditingPromoChange : handleNewPromoChange}
+                        value={formData.title || ""}
+                        onChange={handleInputChange}
                         icon={<BookOpen className="w-4 h-4 text-slate-500" />}
                       />
                       <EnhancedInputField
                         name="promoImageUrl"
                         label="Promotional Image URL"
-                        value={(isEditMode ? editingPromo?.promoImageUrl : newPromoFormData.promoImageUrl) || ""}
-                        onChange={isEditMode ? handleEditingPromoChange : handleNewPromoChange}
+                        value={formData.promoImageUrl}
+                        onChange={handleInputChange}
                         required
                         icon={<ImageIcon className="w-4 h-4 text-slate-500" />}
                       />
@@ -2410,29 +2332,17 @@ export default function AdminDashboard() {
                     <input
                       type="checkbox"
                       id="isFeatured"
-                      name={currentNewContentType === "book" ? "isFeatured" : "isActive"}
-                      checked={
-                        currentNewContentType === "book"
-                          ? ((isEditMode ? editingBook?.isFeatured : newBookFormData.isFeatured) ?? false)
-                          : ((isEditMode ? editingPromo?.isActive : newPromoFormData.isActive) ?? false)
-                      }
-                      onChange={
-                        currentNewContentType === "book"
-                          ? isEditMode
-                            ? handleEditingBookCheckboxChange
-                            : handleNewBookCheckboxChange
-                          : isEditMode
-                          ? handleEditingPromoCheckboxChange
-                          : handleNewPromoCheckboxChange
-                      }
+                      name={isBook(formData) ? "isFeatured" : "isActive"}
+                      checked={isBook(formData) ? formData.isFeatured : formData.isActive}
+                      onChange={handleCheckboxChange}
                       className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                     />
                     <div>
                       <Label htmlFor="isFeatured" className="font-medium text-slate-700 cursor-pointer">
-                        Display on Homepage
+                        {isBook(formData) ? "Is Featured" : "Is Active"}
                       </Label>
                       <p className="text-sm text-slate-600">
-                        This {currentNewContentType === "book" ? "book" : "promo image"} will be featured on the main page
+                        This {formData.contentType === "book" ? "book" : "promo image"} will be featured on the main page.
                       </p>
                     </div>
                   </div>
@@ -2454,45 +2364,14 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </Button>
-                    {isEditMode && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                        className="flex-1 px-8 py-3 text-lg rounded-xl border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 font-semibold"
-                      >
-                        <X className="w-5 h-5 mr-2" />
-                        Cancel
-                      </Button>
-                    )}
                     <Button
                       type="button"
-                      onClick={() => {
-                        setNewBookFormData({
-                          contentType: "book",
-                          title: "",
-                          author: "",
-                          description: "",
-                          imageUrl: "",
-                          pdfUrl: "",
-                          isFeatured: false,
-                        })
-                        setNewPromoFormData({
-                          contentType: "image",
-                          promoImageUrl: "",
-                          isActive: false,
-                          title: "Promotional Image",
-                        })
-                        setLoading(false)
-                        setIsEditMode(false)
-                        setEditingBook(null)
-                        setEditingPromo(null)
-                        setCurrentEditingType(null)
-                        setCurrentNewContentType("book")
-                      }}
-                      className="flex-1 bg-yellow-500 text-white py-3 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      className="flex-1 px-8 py-3 text-lg rounded-xl border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 font-semibold"
                     >
-                      Reset Form
+                      <X className="w-5 h-5 mr-2" />
+                      Cancel
                     </Button>
                   </div>
                 </form>
@@ -2527,27 +2406,27 @@ export default function AdminDashboard() {
                       className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 bg-white border-0 rounded-xl"
                     >
                       <div className="relative">
-                        {c.contentType === "image" && (c as Promo).promoImageUrl ? (
+                        {isPromo(c) && c.promoImageUrl ? (
                           <div className="aspect-[3/4] overflow-hidden bg-slate-100">
                             <img
-                              src={(c as Promo).promoImageUrl}
-                              alt={(c as Promo).title || "Promotional Image"}
+                              src={c.promoImageUrl}
+                              alt={c.title || "Promotional Image"}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                               onError={(e) => {
-                                e.currentTarget.src = ""
-                                toast.error(`⚠️ Failed to load image for promo: ${(c as Promo).title || "Untitled"}`)
+                                e.currentTarget.src = "/placeholder.svg?height=300&width=225";
+                                toast.error(`⚠️ Failed to load image for promo: ${c.title || "Untitled"}`);
                               }}
                             />
                           </div>
-                        ) : c.contentType === "book" && (c as Book).imageUrl ? (
+                        ) : isBook(c) && c.imageUrl ? (
                           <div className="aspect-[3/4] overflow-hidden bg-slate-100">
                             <img
-                              src={(c as Book).imageUrl || "/placeholder.svg"}
-                              alt={(c as Book).title}
+                              src={c.imageUrl || "/placeholder.svg"}
+                              alt={c.title}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                               onError={(e) => {
-                                e.currentTarget.src = "/placeholder.svg?height=300&width=225"
-                                toast.error(`⚠️ Failed to load image for book: ${(c as Book).title}`)
+                                e.currentTarget.src = "/placeholder.svg?height=300&width=225";
+                                toast.error(`⚠️ Failed to load image for book: ${c.title}`);
                               }}
                             />
                           </div>
@@ -2560,80 +2439,44 @@ export default function AdminDashboard() {
                           <ImageIcon className="w-3 h-3 mr-1" />
                           {c.contentType === "book" ? "Book" : "Promo"}
                         </Badge>
-                        {(c.contentType === "book" ? (c as Book).isFeatured : (c as Promo).isActive) && (
+                        {(isBook(c) && c.isFeatured) || (isPromo(c) && c.isActive) ? (
                           <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm px-3 py-1 rounded-full shadow-md">
                             <Star className="w-3 h-3 mr-1" />
                             Featured
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                       <div className="p-6 space-y-3">
-                        {c.contentType === "book" ? (
+                        {isBook(c) ? (
                           <>
                             <div>
-                              <h3 className="font-bold text-xl text-slate-800 line-clamp-2">{(c as Book).title}</h3>
-                              <p className="text-slate-600 flex items-center gap-1 text-sm mt-1">
-                                <Users className="w-4 h-4 text-slate-500" />
-                                {(c as Book).author}
-                              </p>
+                              <h3 className="font-bold text-xl text-slate-800 line-clamp-2">{c.title}</h3>
+                              <p className="text-sm text-slate-500 mt-1">by {c.author}</p>
                             </div>
-                            {(c as Book).description && (
-                              <p className="text-sm text-slate-500 line-clamp-3">{(c as Book).description}</p>
-                            )}
+                            <p className="text-slate-600 text-sm line-clamp-3">{c.description}</p>
                           </>
                         ) : (
-                          <div>
-                            <h3 className="font-bold text-xl text-slate-800 line-clamp-2">{(c as Promo).title || "Promotional Image"}</h3>
-                            <p className="text-slate-600 flex items-center gap-1 text-sm mt-1">
-                              <ImageIcon className="w-4 h-4 text-slate-500" />
-                              {(c as Promo).promoImageUrl ? (c as Promo).promoImageUrl.split("/").pop() : "No URL"}
-                            </p>
-                          </div>
+                          <>
+                            <div>
+                              <h3 className="font-bold text-xl text-slate-800 line-clamp-2">{c.title || "Promotional Image"}</h3>
+                              <p className="text-sm text-slate-500 mt-1">Status: {c.isActive ? "Active" : "Inactive"}</p>
+                            </div>
+                          </>
                         )}
-                      </div>
-                      <div className="p-6 border-t border-slate-200 flex items-center gap-3">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleEdit(c)}
-                          className="h-10 w-10 flex-shrink-0 border-slate-300 hover:bg-slate-100 text-slate-600"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDelete(c._id!, c.contentType)}
-                          className="h-10 w-10 flex-shrink-0 border-slate-300 hover:bg-red-50 text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                        {c.contentType === "book" && (c as Book).pdfUrl && (
-                          <a
-                            href={(c as Book).pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1"
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            onClick={() => handleEdit(c)}
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md"
                           >
-                            <Button className="w-full bg-blue-500 hover:bg-blue-600 transition-colors">
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Book
-                            </Button>
-                          </a>
-                        )}
-                        {c.contentType === "image" && (c as Promo).promoImageUrl && (
-                          <a
-                            href={(c as Promo).promoImageUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1"
+                            <Edit className="w-4 h-4 mr-2" /> Edit
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(c._id!, c.contentType)}
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md"
                           >
-                            <Button className="w-full bg-green-500 hover:bg-green-600 transition-colors">
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Promo
-                            </Button>
-                          </a>
-                        )}
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -2644,5 +2487,5 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
-  )
+  );
 }
