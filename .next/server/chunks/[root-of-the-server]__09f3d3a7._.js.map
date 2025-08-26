@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 6, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 60, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/dell/admin%20dashborad/app/api/test/route.ts"],"sourcesContent":["// pages/api/test.ts\r\n\r\nimport { NextRequest, NextResponse } from \"next/server\";\r\n\r\nexport async function GET(req: NextRequest) {\r\n  try {\r\n    const testData = [\r\n      { id: 1, name: \"Sample Book\", author: \"Test Author\" },\r\n      { id: 2, name: \"Sample Promo\", isActive: true }\r\n    ];\r\n\r\n    return NextResponse.json(testData, { status: 200 });\r\n  } catch (error) {\r\n    return NextResponse.json({ success: false, message: \"Server error\" }, { status: 500 });\r\n  }\r\n}"],"names":[],"mappings":"AAAA,oBAAoB;;;;AAEpB;;AAEO,eAAe,IAAI,GAAgB;IACxC,IAAI;QACF,MAAM,WAAW;YACf;gBAAE,IAAI;gBAAG,MAAM;gBAAe,QAAQ;YAAc;YACpD;gBAAE,IAAI;gBAAG,MAAM;gBAAgB,UAAU;YAAK;SAC/C;QAED,OAAO,gIAAA,CAAA,eAAY,CAAC,IAAI,CAAC,UAAU;YAAE,QAAQ;QAAI;IACnD,EAAE,OAAO,OAAO;QACd,OAAO,gIAAA,CAAA,eAAY,CAAC,IAAI,CAAC;YAAE,SAAS;YAAO,SAAS;QAAe,GAAG;YAAE,QAAQ;QAAI;IACtF;AACF","debugId":null}}]
+}

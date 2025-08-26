@@ -1934,7 +1934,6 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("add");
   const [searchTerm, setSearchTerm] = useState("");
 
-  
   const isBook = (content: Content): content is Book => {
     return content.contentType === "book";
   };

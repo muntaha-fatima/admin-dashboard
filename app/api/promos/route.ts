@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { Promo } from "@/models/promos"; // Make sure the path is correct
 
-
 const allowedOrigins = [
   "https://frontend-rho-jet-76.vercel.app",
   "https://book-website-rho-sooty.vercel.app",
