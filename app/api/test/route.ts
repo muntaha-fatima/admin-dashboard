@@ -1,4 +1,3 @@
-// pages/api/test.ts
 
 import { NextRequest, NextResponse } from "next/server";
 
